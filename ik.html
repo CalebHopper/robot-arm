@@ -1,0 +1,97 @@
+<html>
+<head>
+  <script>
+    function init() {
+      canvas = document.getElementById("mycanvas");
+      ctx = canvas.getContext('2d');
+      canvas.addEventListener("mousemove", function(event) { updateXY(event); });
+      canvas.width = 400;
+      canvas.height = 400;
+      scale = 30;
+      mouseX = 300;
+      mouseY = 200;
+      arm = [];
+      arm[0] = new Element(200,300,1.75*scale,-Math.PI/2);
+      arm[1] = new Element(arm[0].x+(Math.cos(arm[0].angle)*arm[0].length),
+      arm[0].y+(Math.sin(arm[0].angle)*arm[0].length),
+      2.5*scale,-Math.PI/4);
+      arm[2] = new Element(arm[1].x+(Math.cos(arm[1].angle)*arm[1].length),
+      arm[1].y+(Math.sin(arm[1].angle)*arm[1].length),
+      3*scale,1.5*Math.PI);
+      arm[3] = new Element(arm[2].x+(Math.cos(arm[2].angle)*arm[2].length),
+      arm[2].y+(Math.sin(arm[2].angle)*arm[2].length),
+      1*scale,0);
+      main();
+    }
+
+    function main() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.beginPath();
+      ctx.arc(265+arm[3].length,175,65,0,Math.PI*2);
+      ctx.stroke();
+      if (distance({x: mouseX, y:mouseY}, {x:265, y:175}) < 65) {
+        arm[3].x = mouseX;
+        arm[3].y = mouseY;
+      }
+      arm[2].angle = Math.atan2(arm[3].y-arm[2].y, arm[3].x-arm[2].x);
+      arm[2].x += arm[3].x-findEnd(arm[2])[0];
+      arm[1].angle = Math.atan2(arm[2].y-arm[1].y, arm[2].x-arm[1].x);
+      arm[2].y = findEnd(arm[1])[1];
+      arm[1].relAngle = (arm[1].angle-arm[0].angle)*(180/Math.PI);
+      arm[2].relAngle = (arm[2].angle-arm[1].angle)*(180/Math.PI);
+      arm[3].relAngle = (arm[3].angle-arm[2].angle)*(180/Math.PI);
+      for (var x=0; x<arm.length; x++) {
+        drawElement(arm[x]);
+      }
+      ctx.fillText(Math.floor(arm[1].relAngle), arm[1].x-20, arm[1].y-20);
+      ctx.fillText(Math.floor(arm[2].relAngle), arm[2].x-20, arm[2].y-20);
+      ctx.fillText(Math.floor(arm[3].relAngle), arm[3].x-20, arm[3].y-20);
+      window.requestAnimationFrame(main);
+    }
+
+    function Element(x,y,length,angle) {
+      this.x = x;
+      this.y = y;
+      this.length = length;
+      this.angle = angle;
+      this.relAngle = 0;
+      return this;
+    }
+
+    function drawElement(a) {
+      ctx.save();
+      ctx.translate(a.x,a.y);
+      ctx.rotate(a.angle);
+      ctx.fillRect(-.5,-.5,1,1);
+      ctx.fillRect(-.5+a.length,-.5,1,1);
+      ctx.beginPath();
+      ctx.arc(0,0,15,Math.PI/2,-Math.PI/2);
+      ctx.lineTo(a.length,-7.5);
+      ctx.arc(a.length,0,7.5,-Math.PI/2,Math.PI/2);
+      ctx.lineTo(0,15);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function findEnd(a) {
+      end = [0,0];
+      end[0] = a.x+Math.cos(a.angle)*a.length;
+      end[1] = a.y+Math.sin(a.angle)*a.length;
+      return end;
+    }
+
+    function updateXY(e) {
+      mouseX = e.clientX-8-arm[3].length;
+      mouseY = e.clientY-8;
+    }
+
+    function distance(a,b) {
+      return Math.sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
+    }
+
+  </script>
+</head>
+<body onload="init()">
+  <canvas id="mycanvas"></canvas>
+</body>
+</html>
